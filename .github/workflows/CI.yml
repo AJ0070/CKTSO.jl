@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.library && 'with library' || 'no library' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['1.10', '1']
+        library: [true]
+        include:
+          # The package has to stay usable, and say something intelligible, on a machine
+          # that has no CKTSO library. That is a different code path, so it gets a job.
+          - version: '1'
+            library: false
+    steps:
+      - uses: actions/checkout@v4
+
+      # CKTSO is not redistributable and has no JLL, but upstream publishes the Linux
+      # build and the license key, so CI fetches them the same way a user would.
+      - name: Fetch the CKTSO library
+        if: matrix.library
+        run: |
+          set -euo pipefail
+          base=https://raw.githubusercontent.com/chenxm1986/cktso/master
+          mkdir -p "$HOME/cktso"
+          curl -fsSL "$base/rocky8_x64_gcc850/libcktso_l.so" -o "$HOME/cktso/libcktso_l.so"
+          # The key has to sit next to the library file; that is how CKTSO finds it.
+          curl -fsSL "$base/license/cktso.lic" -o "$HOME/cktso/cktso.lic"
+          echo "CKTSO_LIBRARY=$HOME/cktso/libcktso_l.so" >> "$GITHUB_ENV"
+
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.version }}
+          arch: x64
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+
+      - uses: julia-actions/julia-processcoverage@v1
+        if: matrix.library
+      - uses: codecov/codecov-action@v4
+        if: matrix.library
+        with:
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
