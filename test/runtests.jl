@@ -69,5 +69,7 @@ using Test
             A = sparse([1.0 0.0; 0.0 0.0])
             @test_throws CKTSO.CKTSOError cktso(A)
         end
+
+        include("readme.jl")
     end
 end

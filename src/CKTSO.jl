@@ -128,10 +128,10 @@ _check(code::Integer, op::AbstractString) = code == 0 || throw(CKTSOError(Int(co
 """
     CKTSOSolver
 
-A CKTSO solver instance holding the analysis and numeric factorization of a sparse matrix.
-CKTSO's own C API calls this a solver instance, and the name keeps it distinct from
-LinearSolve's `CKTSOFactorization` algorithm. Build one with [`cktso`](@ref) and solve with `\\` or `ldiv!`. Refresh the values without
-repeating the symbolic analysis using [`cktso!`](@ref).
+A CKTSO solver instance holding the analysis and numeric factorization of a sparse matrix,
+named the way CKTSO's own C API names it. Build one with [`cktso`](@ref) and solve with
+`\\` or `ldiv!`. Refresh the values without repeating the symbolic analysis using
+[`cktso!`](@ref).
 """
 mutable struct CKTSOSolver{Tv <: Float64} <: LinearAlgebra.Factorization{Tv}
     inst::Ptr{Cvoid}

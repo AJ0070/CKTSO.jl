@@ -8,9 +8,12 @@ simulation spends its time in.
 ## Getting the library
 
 CKTSO is distributed as a prebuilt shared library plus a license key file, and is not
-redistributable, so this package does not bundle it. Download the build for your platform
-from the [CKTSO repository](https://github.com/chenxm1986/cktso), keep `cktso.lic` in the
-same directory as the library, and point this package at it:
+redistributable, so this package does not bundle it. Upstream ships builds for **Linux
+x86_64** (several glibc vintages) and **Windows x86_64**; there is no macOS or ARM build,
+so this package cannot work on those platforms.
+
+Download a build from the [CKTSO repository](https://github.com/chenxm1986/cktso), keep
+`cktso.lic` in the same directory as the library, and point this package at it:
 
 ```julia
 ENV["CKTSO_LIBRARY"] = "/path/to/libcktso_l.so"   # before `using CKTSO`
@@ -23,7 +26,8 @@ using CKTSO
 CKTSO.set_library!("/path/to/libcktso_l.so")
 ```
 
-`CKTSO.is_available()` reports whether one is configured.
+`CKTSO.is_available()` reports whether one is configured. Every solver call throws a
+`CKTSO.CKTSOError` explaining what to do if one is not.
 
 ## Use
 
@@ -50,20 +54,13 @@ A `SparseMatrixCSC` is passed through without conversion. CKTSO reads the index 
 rows, so Julia's column-major arrays describe the transpose, and the solve asks for the
 column reading to put it back.
 
-## With LinearSolve.jl
-
-```julia
-using LinearSolve, CKTSO
-solve(LinearProblem(A, b), CKTSOFactorization())
-```
-
 ## Errors
 
-CKTSO's return codes surface as `CKTSO.CKTSOError`, including the license error you get
-when `cktso.lic` is not beside the library. A singular matrix throws here; through
-LinearSolve it comes back as a `ReturnCode.Failure` instead.
+CKTSO's return codes surface as `CKTSO.CKTSOError`, carrying the code and the operation
+that failed. A singular matrix throws, as does the license error you get when `cktso.lic`
+is not beside the library.
 
 ## Scope
 
 Real, square, double-precision systems through the 64-bit-index (`_L`) entry points.
-CKTSO's complex and 32-bit-index interfaces are not wrapped yet.
+CKTSO's complex and 32-bit-index interfaces are not wrapped.
