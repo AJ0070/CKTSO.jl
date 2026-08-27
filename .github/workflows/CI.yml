@@ -17,6 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      # Job level, not step level: the `env` context is only reliably readable from a
+      # step's own `if:` when it is set here.
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -54,12 +58,10 @@ jobs:
       - uses: julia-actions/julia-processcoverage@v1
         if: matrix.library
       # Codecov stopped accepting tokenless uploads, so this is skipped rather than
-      # failed when the repository has no CODECOV_TOKEN set. Coverage is still
+      # failed on a fork or a clone with no CODECOV_TOKEN set. Coverage is still
       # collected above either way.
       - uses: codecov/codecov-action@v5
         if: matrix.library && env.CODECOV_TOKEN != ''
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
