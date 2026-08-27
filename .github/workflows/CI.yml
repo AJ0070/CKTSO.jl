@@ -65,4 +65,6 @@ jobs:
         with:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
+          # The test suite is the thing CI is asserting; a Codecov outage or a
+          # not-yet-onboarded repository should not turn that red.
+          fail_ci_if_error: false
