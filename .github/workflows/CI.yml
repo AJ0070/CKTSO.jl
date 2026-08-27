@@ -28,7 +28,7 @@ jobs:
           - version: '1'
             library: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # CKTSO is not redistributable and has no JLL, but upstream publishes the Linux
       # build and the license key, so CI fetches them the same way a user would.
@@ -53,9 +53,14 @@ jobs:
 
       - uses: julia-actions/julia-processcoverage@v1
         if: matrix.library
-      - uses: codecov/codecov-action@v4
-        if: matrix.library
+      # Codecov stopped accepting tokenless uploads, so this is skipped rather than
+      # failed when the repository has no CODECOV_TOKEN set. Coverage is still
+      # collected above either way.
+      - uses: codecov/codecov-action@v5
+        if: matrix.library && env.CODECOV_TOKEN != ''
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
+          fail_ci_if_error: true
